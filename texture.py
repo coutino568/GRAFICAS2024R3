@@ -26,7 +26,8 @@ class Texture(object):
                         pixelsrow.append([r,g,b])
                         #print("PIXEL ROW APPENDED: (" + str(r)+" ; "+str(g)+" ; "+str(b)+" )")
                     self.pixels.append(pixelsrow)
-                    
+        print("WIDTH:" + str(self.width) + " / HEIGHT : "+ str(self.height))
+               
         
                 
     def getColor(self, u, v):

@@ -60,6 +60,10 @@ def shaderHandler(shaderName,A,B,C,normals, light,u,v,w):
     elif shaderName =="GLOW":
         r,g,b,colorUsage = glow(normals,u,v,w,light)
         return r,g,b,colorUsage
+    
+    elif shaderName =="UNLIT":
+        r,g,b,colorUsage = unlit(normals,u,v,w,light)
+        return r,g,b,colorUsage
         
         
     else:
@@ -100,12 +104,14 @@ def smooth(normals,light,u,v,w):
     intensity1= dotProduct(light,normals[0])
     intensity2= dotProduct(light,normals[1])
     intensity3= dotProduct(light,normals[2])
-                            
+    
+    
+    minIntensity = 0.1
     intensity = intensity1*u +intensity2*v+ intensity3*w
-    if intensity> 0.05:
+    if intensity> minIntensity:
         return intensity,intensity,intensity,colorUsage
     else:
-        return 0.05,0.05,0.05,colorUsage
+        return minIntensity,minIntensity,minIntensity,colorUsage
     
     
     
@@ -162,5 +168,8 @@ def glow(normals,u,v,w,light):
         colorUsage= False
         return color[0],color[1],color[2],colorUsage
     
+def unlit(normals,light,u,v,w):
+    
+    return 1,1,1,True
     
     

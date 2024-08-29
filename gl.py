@@ -33,10 +33,11 @@ def color(r ,g ,b ):
 
 
 class Renderer(object):
-    def __init__(self,width , height, globalLight):
+    def __init__(self,width , height, globalLight,backgroundTexturePath):
         self.black = color(0,0,0)
         self.bgColor = color(0,0,0)
         self.viewportBgColor = color(0,0,0)
+        self.backgroundTexture = None
         self.mainColor = color(0,0,1)
         self.glCreateWindow( width, height)
         self.glViewPort(0,0,self.width,self.height)
@@ -45,8 +46,13 @@ class Renderer(object):
         self.light= globalLight
         self.activeObjectIndex=0
         
+        
+        if backgroundTexturePath != None:
+            self.backgroundTexture = Texture(backgroundTexturePath)
 
-
+        
+       
+        
 
     def glCreateWindow (self, width, height):
         self.width = int(width)
@@ -70,7 +76,17 @@ class Renderer(object):
         self.mainColor = color(r,g,b)
 
     def glClear(self):
-        self.matrix = [[self.bgColor for x in range(self.width)] for y in range(self.height)]
+        if self.backgroundTexture != None :
+            
+            for x in range(self.width):
+                for y in range(self.height):
+                    color1= self.backgroundTexture.getColor(y /self.height, x/self.width )
+                    color2 = color(color1[0],color1[1],color1[2])
+                    self.matrix[y][x]= color2
+                    
+
+        else:
+            self.matrix = [[self.bgColor for x in range(self.width)] for y in range(self.height)]
         self.zBuffer = [[float('inf') for x in range(self.width)] for y in range(self.height)]
 
 
@@ -112,7 +128,7 @@ class Renderer(object):
                                            [0, 0, -1, 0]]
         
         
-    def SetViewMatrix(self, translate = V3(0,0,0), rotate = V3(0,0,0)):
+    def SetViewMatrix(self, translate = V3(0,500,0), rotate = V3(0,0,0)):
         self.camMatrix = self.glCreateObjectMatrix(translate,V3(1,1,1),rotate)
         self.viewMatrix = matrixInverse(self.camMatrix)
         
@@ -353,7 +369,7 @@ class Renderer(object):
                             tx = tA[0] * u + tB[0] * v + tC[0] * w
                             ty = tA[1] * u + tB[1] * v + tC[1] * w
                             if 0<=tx<1 and 0<=ty<1:
-                                texColor = self.objetos[self.activeObjectIndex].texture.getColor(tx, ty)
+                                texColor = self.objetos[self.activeObjectIndex].texture.getColor(ty, tx)
                             
                             else:
                                 texColor=[1,1,1]
@@ -428,6 +444,8 @@ class Renderer(object):
             
             for i in range (0,len (objeto.faces)):
                 # print("HARE UN TRIANGULO CON ESTOS VERTICES :"+ str(face))
+                
+                
                 ##accede a los vertices indicados por cada cara
                 vert1= objeto.transformedVertices[objeto.faces[i][0][0]-1]
                 vert2= objeto.transformedVertices[objeto.faces[i][1][0]-1]
@@ -453,6 +471,33 @@ class Renderer(object):
                 # MAS ADELANTE SE USARA ESTE METODO PARA PASARLE A LA FUNCION tirnagle 3 la respuesta del shader
                 self.glTriangle3(objeto.shaderName,vertices[0],vertices[1],vertices[2],textCoord, normals)
                 
+                ## en caso que sea un cuadrilatero, dibuja un segundo triangulo
+                if len(objeto.faces[i]) == 4 :
+                    
+                    vert1= objeto.transformedVertices[objeto.faces[i][0][0]-1]
+                    vert2= objeto.transformedVertices[objeto.faces[i][2][0]-1]
+                    vert3= objeto.transformedVertices[objeto.faces[i][3][0]-1]
+                    
+                    
+                    textcoord1= objeto.texcoords[objeto.faces[i][0][1]-1]
+                    textcoord2= objeto.texcoords[objeto.faces[i][2][1]-1]
+                    textcoord3= objeto.texcoords[objeto.faces[i][3][1]-1]
+                    
+                    vn1 = objeto.transformedNormals[objeto.faces[i][0][2]-1]
+                    vn2 = objeto.transformedNormals[objeto.faces[i][2][2]-1]
+                    vn3 = objeto.transformedNormals[objeto.faces[i][3][2]-1]
+                    
+                    
+                
+                    # De una manera muy ineficiente le manda los vertices de cada uno de los triangulos (aun sin transformar, solo redondeado ) y las coordenadas de textura de cada uno de los vertices
+                    vertices =[[math.floor(vert1[0]), math.floor(vert1[1]) ,math.floor(vert1[2]) ],[math.floor(vert2[0]), math.floor(vert2[1]),math.floor(vert2[2])],[math.floor(vert3[0]), math.floor(vert3[1]) , math.floor(vert3[2])]]
+                    textCoord= [[textcoord1[0],textcoord1[1]],[textcoord2[0],textcoord2[1]],[textcoord3[0],textcoord3[1]]]
+                    normals = [[vn1[0],vn1[1],vn1[2]],[vn2[0],vn2[1],vn2[2]],[vn3[0],vn3[1],vn3[2]]]
+                    
+                
+                    # MAS ADELANTE SE USARA ESTE METODO PARA PASARLE A LA FUNCION tirnagle 3 la respuesta del shader
+                    self.glTriangle3(objeto.shaderName,vertices[0],vertices[1],vertices[2],textCoord, normals)
+                    
                 # self.glSetColor(1,1,1)
                 #self.glTrinagleOutside(vert1,vert2,vert3)
                 
